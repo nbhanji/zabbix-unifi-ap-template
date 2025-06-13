@@ -1,0 +1,52 @@
+zabbix_export:
+  version: '7.2'
+  template_groups:
+    - uuid: 36bff6c29af64692839d077febfc7079
+      name: 'Templates/Network devices'
+  templates:
+    - uuid: ecafb1c22c324453b699eb8eb1b70a2c
+      template: 'Unifi AP Connected Clients by SNMP'
+      name: 'Unifi AP Connected Clients by SNMP'
+      description: 'Template to retrieve number of devices connected to Unifi AP'
+      groups:
+        - name: 'Templates/Network devices'
+      items:
+        - uuid: 6c47da28d4e749e19629a17f0f52d561
+          name: 'Total Clients connected to AP on all Channels'
+          type: CALCULATED
+          key: wifi.totalClientsChannel
+          value_type: TEXT
+          params: 'sum(last_foreach(//wifi.clients[*,*]))'
+      discovery_rules:
+        - uuid: 41f9d024f9d2496990fa2cacfc618c81
+          name: 'WiFi SSID discovery'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#WIFI.CHANNEL},1.3.6.1.4.1.41112.1.6.1.2.1.4,{#WIFI.SSID},.1.3.6.1.4.1.41112.1.6.1.2.1.6,{#WIFI.BAND},.1.3.6.1.4.1.41112.1.6.1.2.1.9,{#WIFI.CLIENTS},.1.3.6.1.4.1.41112.1.6.1.2.1.8]'
+          key: wifi.ssid.discovery
+          delay: 10m
+          enabled_lifetime_type: DISABLE_AFTER
+          enabled_lifetime: 1h
+          description: 'The discovery of SSIDs assigned to AP - Unifi'
+          item_prototypes:
+            - uuid: 3e6ce06d87a94b8791a982be528063e3
+              name: 'WiFi Clients of SSID: [{#WIFI.CHANNEL}] - {#WIFI.SSID}'
+              type: SNMP_AGENT
+              snmp_oid: '.1.3.6.1.4.1.41112.1.6.1.2.1.8.{#SNMPINDEX}'
+              key: 'wifi.clients[{#WIFI.SSID},{#WIFI.CHANNEL}]'
+              trends: '0'
+              tags:
+                - tag: SSID
+                  value: '{#WIFI.SSID}'
+            - uuid: 7542aabcc6d548629bafac261688894b
+              name: 'WiFi Total Clients for SSID: {#WIFI.SSID}'
+              type: CALCULATED
+              key: 'wifi.totalClients[{#WIFI.SSID}]'
+              trends: 90d
+              params: 'sum(last_foreach(//wifi.clients[*,*]?[(tag="SSID:{#WIFI.SSID}")]))'
+      tags:
+        - tag: class
+          value: network
+        - tag: target
+          value: 'unifi wifi'
+        - tag: type
+          value: unifi-ap
