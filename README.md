@@ -1,0 +1,1 @@
+This is the Template for Zabbix, that calculates number of stations/clients connected to the AP. I also added summations for each SSID with multiple channels. If you have any suggestions or improvements, please do so. Thank you.
